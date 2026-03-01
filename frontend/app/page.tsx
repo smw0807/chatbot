@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,7 +24,7 @@ export default function ChatPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
   }, [messages]);
 
   useEffect(() => {
@@ -40,8 +40,8 @@ export default function ChatPage() {
 
     setMessages((prev) => [
       ...prev,
-      { role: 'user', content: userMessage },
-      { role: 'assistant', content: '', streaming: true },
+      {role: 'user', content: userMessage},
+      {role: 'assistant', content: '', streaming: true},
     ]);
 
     const controller = new AbortController();
@@ -56,8 +56,8 @@ export default function ChatPage() {
                 content: '오류가 발생했습니다. 다시 시도해주세요.',
                 streaming: false,
               }
-            : msg
-        )
+            : msg,
+        ),
       );
     };
 
@@ -83,13 +83,13 @@ export default function ChatPage() {
       let buffer = '';
 
       while (true) {
-        const { value, done } = await reader.read();
+        const {value, done} = await reader.read();
 
         if (done) {
           break;
         }
 
-        buffer += decoder.decode(value, { stream: true });
+        buffer += decoder.decode(value, {stream: true});
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
 
@@ -116,8 +116,8 @@ export default function ChatPage() {
 
             setMessages((prev) =>
               prev.map((msg, i) =>
-                i === prev.length - 1 ? { ...msg, streaming: false } : msg
-              )
+                i === prev.length - 1 ? {...msg, streaming: false} : msg,
+              ),
             );
             setIsStreaming(false);
             inputRef.current?.focus();
@@ -129,9 +129,9 @@ export default function ChatPage() {
             setMessages((prev) =>
               prev.map((msg, i) =>
                 i === prev.length - 1
-                  ? { ...msg, content: msg.content + data.text }
-                  : msg
-              )
+                  ? {...msg, content: msg.content + data.text}
+                  : msg,
+              ),
             );
           }
         }
@@ -160,7 +160,7 @@ export default function ChatPage() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-400 mt-24 text-sm">
+          <div className="text-center text-black mt-24 text-sm">
             무엇이든 물어보세요
           </div>
         )}
@@ -170,15 +170,13 @@ export default function ChatPage() {
             key={i}
             className={`flex ${
               msg.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
-          >
+            }`}>
             <div
               className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                 msg.role === 'user'
                   ? 'bg-blue-500 text-white'
                   : 'bg-white text-gray-800 shadow-sm border border-gray-100'
-              }`}
-            >
+              }`}>
               <p className="whitespace-pre-wrap">
                 {msg.content}
                 {msg.streaming && (
@@ -208,13 +206,12 @@ export default function ChatPage() {
             }}
             placeholder="메시지를 입력하세요..."
             disabled={isStreaming}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-50 disabled:text-gray-400"
+            className="flex-1 border border-gray-200 text-black rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-50 disabled:text-gray-400"
           />
           <button
             onClick={sendMessage}
             disabled={isStreaming || !input.trim()}
-            className="bg-blue-500 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
+            className="bg-blue-500 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
             전송
           </button>
         </div>
