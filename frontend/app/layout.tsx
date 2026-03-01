@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: '챗봇',
-  description: '간단한 스트리밍 챗봇 UI',
+  title: 'Song Minu Portfolio Chatbot',
+  description: '송민우의 경험과 기술을 질문으로 탐색하는 포트폴리오 챗봇',
 };
 
 export default function RootLayout({

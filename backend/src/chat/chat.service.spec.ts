@@ -1,4 +1,5 @@
 import { ChatService } from './chat.service';
+import { SONGMINU_SYSTEM_PROMPT } from './data/songminu-profile';
 
 describe('ChatService', () => {
   const originalApiKey = process.env.ANTHROPIC_API_KEY;
@@ -48,6 +49,10 @@ describe('ChatService', () => {
     const fetchCalls = (global.fetch as jest.MockedFunction<typeof fetch>).mock
       .calls;
     const requestInit = fetchCalls[0]?.[1];
+    const requestBody = JSON.parse(String(requestInit?.body)) as {
+      system?: string;
+      messages?: Array<{ role: string; content: string }>;
+    };
 
     expect(requestInit?.method).toBe('POST');
     expect(requestInit?.headers).toEqual(
@@ -56,6 +61,10 @@ describe('ChatService', () => {
         'anthropic-version': '2023-06-01',
       }),
     );
+    expect(requestBody.system).toBe(SONGMINU_SYSTEM_PROMPT);
+    expect(requestBody.messages).toEqual([
+      { role: 'user', content: '첫 질문' },
+    ]);
   });
 
   it('does not persist the user message when the provider fails', async () => {

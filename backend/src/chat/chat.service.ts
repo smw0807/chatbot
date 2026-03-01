@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Observable } from 'rxjs';
+import { SONGMINU_SYSTEM_PROMPT } from './data/songminu-profile';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -112,6 +113,7 @@ export class ChatService {
           },
           body: JSON.stringify({
             model: this.getModel(),
+            system: SONGMINU_SYSTEM_PROMPT,
             messages: this.toAnthropicInput(nextMessages),
             stream: true,
             max_tokens: 1024,
