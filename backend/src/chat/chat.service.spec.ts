@@ -1,30 +1,30 @@
 import { ChatService } from './chat.service';
 
 describe('ChatService', () => {
-  const originalApiKey = process.env.OPENAI_API_KEY;
-  const originalApiUrl = process.env.OPENAI_API_URL;
-  const originalModel = process.env.OPENAI_MODEL;
+  const originalApiKey = process.env.ANTHROPIC_API_KEY;
+  const originalApiUrl = process.env.ANTHROPIC_API_URL;
+  const originalModel = process.env.ANTHROPIC_MODEL;
   const originalFetch = global.fetch;
 
   afterEach(() => {
-    process.env.OPENAI_API_KEY = originalApiKey;
-    process.env.OPENAI_API_URL = originalApiUrl;
-    process.env.OPENAI_MODEL = originalModel;
+    process.env.ANTHROPIC_API_KEY = originalApiKey;
+    process.env.ANTHROPIC_API_URL = originalApiUrl;
+    process.env.ANTHROPIC_MODEL = originalModel;
     global.fetch = originalFetch;
     jest.restoreAllMocks();
   });
 
   it('stores the completed assistant response in the session history', async () => {
-    process.env.OPENAI_API_KEY = 'test-key';
-    process.env.OPENAI_API_URL = 'https://api.openai.com/v1/responses';
-    process.env.OPENAI_MODEL = 'gpt-4.1-mini';
+    process.env.ANTHROPIC_API_KEY = 'test-key';
+    process.env.ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+    process.env.ANTHROPIC_MODEL = 'claude-3-7-sonnet-latest';
 
     const service = new ChatService();
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       body: createSseStream([
-        'data: {"type":"response.output_text.delta","delta":"답변"}\n\n',
-        'data: {"type":"response.completed"}\n\n',
+        'event: content_block_delta\ndata: {"type":"content_block_delta","delta":{"type":"text_delta","text":"답변"}}\n\n',
+        'event: message_stop\ndata: {"type":"message_stop"}\n\n',
       ]),
     }) as typeof fetch;
 
@@ -41,7 +41,7 @@ describe('ChatService', () => {
       { role: 'assistant', content: '답변' },
     ]);
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://api.openai.com/v1/responses',
+      'https://api.anthropic.com/v1/messages',
       expect.any(Object),
     );
 
@@ -52,14 +52,15 @@ describe('ChatService', () => {
     expect(requestInit?.method).toBe('POST');
     expect(requestInit?.headers).toEqual(
       expect.objectContaining({
-        Authorization: 'Bearer test-key',
+        'x-api-key': 'test-key',
+        'anthropic-version': '2023-06-01',
       }),
     );
   });
 
   it('does not persist the user message when the provider fails', async () => {
-    process.env.OPENAI_API_KEY = 'test-key';
-    process.env.OPENAI_API_URL = 'https://api.openai.com/v1/responses';
+    process.env.ANTHROPIC_API_KEY = 'test-key';
+    process.env.ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
     const service = new ChatService();
     global.fetch = jest.fn().mockResolvedValue({

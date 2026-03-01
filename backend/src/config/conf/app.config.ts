@@ -3,7 +3,7 @@ import { registerAs } from '@nestjs/config';
 export default registerAs('app', () => ({
   port: process.env.APP_PORT || 3002,
   frontendUrl: process.env.FRONTEND_URL || '',
-  openAiApiKey: process.env.OPENAI_API_KEY || '',
-  openAiApiUrl: process.env.OPENAI_API_URL || '',
-  openAiModel: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
+  anthropicApiUrl: process.env.ANTHROPIC_API_URL || 'https://api.anthropic.com/v1/messages',
+  anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-3-7-sonnet-latest',
 }));

@@ -13,18 +13,17 @@ interface StreamChunk {
   sessionId?: string;
 }
 
-interface OpenAIInputMessage {
-  type: 'message';
+interface AnthropicInputMessage {
   role: 'user' | 'assistant';
-  content: Array<{
-    type: 'input_text';
-    text: string;
-  }>;
+  content: string;
 }
 
-interface OpenAIStreamEvent {
+interface AnthropicStreamEvent {
   type: string;
-  delta?: string;
+  delta?: {
+    type?: string;
+    text?: string;
+  };
   error?: {
     message?: string;
   };
@@ -34,14 +33,18 @@ interface OpenAIStreamEvent {
 export class ChatService {
   private sessions = new Map<string, ChatMessage[]>();
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService?: ConfigService) {}
+
+  private getConfigValue(key: string): string | undefined {
+    return this.configService?.get<string>(key) ?? process.env[key];
+  }
 
   private getApiKey(): string {
-    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    const apiKey = this.getConfigValue('ANTHROPIC_API_KEY');
 
     if (!apiKey) {
       throw new InternalServerErrorException(
-        'OPENAI_API_KEY is not configured',
+        'ANTHROPIC_API_KEY is not configured',
       );
     }
 
@@ -49,36 +52,32 @@ export class ChatService {
   }
 
   private getModel(): string {
-    return process.env.OPENAI_MODEL ?? 'gpt-4.1-mini';
+    return this.getConfigValue('ANTHROPIC_MODEL') ?? 'claude-3-7-sonnet-latest';
   }
 
   private getApiUrl(): string {
-    const apiUrl = this.configService.get<string>('OPENAI_API_URL');
+    const apiUrl =
+      this.getConfigValue('ANTHROPIC_API_URL') ??
+      'https://api.anthropic.com/v1/messages';
 
     if (!apiUrl) {
       throw new InternalServerErrorException(
-        'OPENAI_API_URL is not configured',
+        'ANTHROPIC_API_URL is not configured',
       );
     }
 
     return apiUrl;
   }
 
-  private toOpenAIInput(messages: ChatMessage[]): OpenAIInputMessage[] {
+  private toAnthropicInput(messages: ChatMessage[]): AnthropicInputMessage[] {
     return messages.map((message) => ({
-      type: 'message',
       role: message.role,
-      content: [
-        {
-          type: 'input_text',
-          text: message.content,
-        },
-      ],
+      content: message.content,
     }));
   }
 
   private async readErrorMessage(response: Response): Promise<string> {
-    const fallback = `OpenAI request failed with status ${response.status}`;
+    const fallback = `Anthropic request failed with status ${response.status}`;
 
     try {
       const payload = (await response.json()) as {
@@ -108,13 +107,14 @@ export class ChatService {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.getApiKey()}`,
+            'anthropic-version': '2023-06-01',
+            'x-api-key': this.getApiKey(),
           },
           body: JSON.stringify({
             model: this.getModel(),
-            input: this.toOpenAIInput(nextMessages),
+            messages: this.toAnthropicInput(nextMessages),
             stream: true,
-            max_output_tokens: 1024,
+            max_tokens: 1024,
           }),
           signal: abortController.signal,
         });
@@ -124,7 +124,7 @@ export class ChatService {
         }
 
         if (!response.body) {
-          throw new Error('OpenAI response body is missing');
+          throw new Error('Anthropic response body is missing');
         }
 
         const reader = response.body.getReader();
@@ -149,19 +149,22 @@ export class ChatService {
               continue;
             }
 
-            if (parsedEvent.type === 'response.output_text.delta') {
-              const text = parsedEvent.delta ?? '';
+            if (
+              parsedEvent.type === 'content_block_delta' &&
+              parsedEvent.delta?.type === 'text_delta'
+            ) {
+              const text = parsedEvent.delta.text ?? '';
               assistantContent += text;
               observer.next({ text, done: false });
             }
 
             if (parsedEvent.type === 'error') {
               throw new Error(
-                parsedEvent.error?.message ?? 'OpenAI streaming failed',
+                parsedEvent.error?.message ?? 'Anthropic streaming failed',
               );
             }
 
-            if (parsedEvent.type === 'response.completed') {
+            if (parsedEvent.type === 'message_stop') {
               this.sessions.set(sessionId, [
                 ...nextMessages,
                 { role: 'assistant', content: assistantContent },
@@ -173,10 +176,10 @@ export class ChatService {
           }
         }
 
-        throw new Error('OpenAI streaming ended before completion');
+        throw new Error('Anthropic streaming ended before completion');
       })().catch((error: unknown) => {
         observer.error(
-          error instanceof Error ? error : new Error('OpenAI request failed'),
+          error instanceof Error ? error : new Error('Anthropic request failed'),
         );
       });
 
@@ -184,7 +187,7 @@ export class ChatService {
     });
   }
 
-  private parseSseEvent(rawEvent: string): OpenAIStreamEvent | null {
+  private parseSseEvent(rawEvent: string): AnthropicStreamEvent | null {
     const dataLines = rawEvent
       .split('\n')
       .filter((line) => line.startsWith('data:'))
@@ -201,6 +204,6 @@ export class ChatService {
       return null;
     }
 
-    return JSON.parse(payload) as OpenAIStreamEvent;
+    return JSON.parse(payload) as AnthropicStreamEvent;
   }
 }

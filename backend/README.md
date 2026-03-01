@@ -31,6 +31,18 @@
 $ npm install
 ```
 
+## Environment
+
+Set these variables before starting the backend:
+
+```bash
+ANTHROPIC_API_KEY=your-anthropic-key
+ANTHROPIC_API_URL=https://api.anthropic.com/v1/messages
+ANTHROPIC_MODEL=claude-3-7-sonnet-latest
+FRONTEND_URL=http://localhost:3000
+APP_PORT=3002
+```
+
 ## Compile and run the project
 
 ```bash
