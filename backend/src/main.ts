@@ -1,15 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error('ANTHROPIC_API_KEY is not set');
-  }
+
+  const configService = app.get(ConfigService);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    origin: configService.get<string>('FRONTEND_URL'),
     credentials: true,
   });
-  await app.listen(3002);
+  await app.listen(configService.get<number>('APP_PORT') as number);
 }
 void bootstrap();
