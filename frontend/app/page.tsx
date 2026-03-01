@@ -1,65 +1,165 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useRef, useState } from 'react';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  streaming?: boolean;
+}
+
+const API_URL = process.env.API_URL;
+console.log(API_URL);
+if (!API_URL) {
+  throw new Error('API_URL is not set');
+}
+
+export default function ChatPage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = () => {
+    const userMessage = input.trim();
+    if (!userMessage || isStreaming) return;
+
+    setInput('');
+    setIsStreaming(true);
+
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: '', streaming: true },
+    ]);
+
+    const params = new URLSearchParams({ message: userMessage });
+    if (sessionId) params.set('sessionId', sessionId);
+
+    const eventSource = new EventSource(
+      `${API_URL}/chat/stream?${params.toString()}`
+    );
+
+    eventSource.onmessage = (e: MessageEvent) => {
+      const data = JSON.parse(e.data) as {
+        text: string;
+        done: boolean;
+        sessionId?: string;
+      };
+
+      if (data.done) {
+        if (data.sessionId) setSessionId(data.sessionId);
+        setMessages((prev) =>
+          prev.map((msg, i) =>
+            i === prev.length - 1 ? { ...msg, streaming: false } : msg
+          )
+        );
+        setIsStreaming(false);
+        eventSource.close();
+        inputRef.current?.focus();
+      } else {
+        setMessages((prev) =>
+          prev.map((msg, i) =>
+            i === prev.length - 1
+              ? { ...msg, content: msg.content + data.text }
+              : msg
+          )
+        );
+      }
+    };
+
+    eventSource.onerror = () => {
+      setMessages((prev) =>
+        prev.map((msg, i) =>
+          i === prev.length - 1
+            ? {
+                ...msg,
+                content: '오류가 발생했습니다. 다시 시도해주세요.',
+                streaming: false,
+              }
+            : msg
+        )
+      );
+      setIsStreaming(false);
+      eventSource.close();
+    };
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b px-6 py-4 shadow-sm flex-shrink-0">
+        <h1 className="text-lg font-semibold text-gray-800">챗봇</h1>
+      </header>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+        {messages.length === 0 && (
+          <div className="text-center text-gray-400 mt-24 text-sm">
+            무엇이든 물어보세요
+          </div>
+        )}
+
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`flex ${
+              msg.role === 'user' ? 'justify-end' : 'justify-start'
+            }`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div
+              className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                msg.role === 'user'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-800 shadow-sm border border-gray-100'
+              }`}
+            >
+              <p className="whitespace-pre-wrap">
+                {msg.content}
+                {msg.streaming && (
+                  <span className="inline-block w-[2px] h-4 ml-0.5 bg-current align-middle animate-pulse" />
+                )}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="bg-white border-t px-4 py-4 flex-shrink-0">
+        <div className="flex gap-2 max-w-3xl mx-auto">
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="메시지를 입력하세요..."
+            disabled={isStreaming}
+            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-50 disabled:text-gray-400"
+          />
+          <button
+            onClick={sendMessage}
+            disabled={isStreaming || !input.trim()}
+            className="bg-blue-500 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Documentation
-          </a>
+            전송
+          </button>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
