@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Observable } from 'rxjs';
 
 interface ChatMessage {
@@ -33,6 +34,8 @@ interface OpenAIStreamEvent {
 export class ChatService {
   private sessions = new Map<string, ChatMessage[]>();
 
+  constructor(private readonly configService: ConfigService) {}
+
   private getApiKey(): string {
     const apiKey = process.env.OPENAI_API_KEY;
 
@@ -47,6 +50,18 @@ export class ChatService {
 
   private getModel(): string {
     return process.env.OPENAI_MODEL ?? 'gpt-4.1-mini';
+  }
+
+  private getApiUrl(): string {
+    const apiUrl = this.configService.get<string>('OPENAI_API_URL');
+
+    if (!apiUrl) {
+      throw new InternalServerErrorException(
+        'OPENAI_API_URL is not configured',
+      );
+    }
+
+    return apiUrl;
   }
 
   private toOpenAIInput(messages: ChatMessage[]): OpenAIInputMessage[] {
@@ -89,7 +104,7 @@ export class ChatService {
       let assistantContent = '';
 
       void (async () => {
-        const response = await fetch('https://api.openai.com/v1/responses', {
+        const response = await fetch(this.getApiUrl(), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

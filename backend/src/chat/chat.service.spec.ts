@@ -2,11 +2,13 @@ import { ChatService } from './chat.service';
 
 describe('ChatService', () => {
   const originalApiKey = process.env.OPENAI_API_KEY;
+  const originalApiUrl = process.env.OPENAI_API_URL;
   const originalModel = process.env.OPENAI_MODEL;
   const originalFetch = global.fetch;
 
   afterEach(() => {
     process.env.OPENAI_API_KEY = originalApiKey;
+    process.env.OPENAI_API_URL = originalApiUrl;
     process.env.OPENAI_MODEL = originalModel;
     global.fetch = originalFetch;
     jest.restoreAllMocks();
@@ -14,6 +16,7 @@ describe('ChatService', () => {
 
   it('stores the completed assistant response in the session history', async () => {
     process.env.OPENAI_API_KEY = 'test-key';
+    process.env.OPENAI_API_URL = 'https://api.openai.com/v1/responses';
     process.env.OPENAI_MODEL = 'gpt-4.1-mini';
 
     const service = new ChatService();
@@ -56,6 +59,7 @@ describe('ChatService', () => {
 
   it('does not persist the user message when the provider fails', async () => {
     process.env.OPENAI_API_KEY = 'test-key';
+    process.env.OPENAI_API_URL = 'https://api.openai.com/v1/responses';
 
     const service = new ChatService();
     global.fetch = jest.fn().mockResolvedValue({
