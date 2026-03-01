@@ -34,10 +34,10 @@ interface OpenAIStreamEvent {
 export class ChatService {
   private sessions = new Map<string, ChatMessage[]>();
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   private getApiKey(): string {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
 
     if (!apiKey) {
       throw new InternalServerErrorException(
