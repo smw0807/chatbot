@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { MessageEvent } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -8,24 +7,44 @@ interface ChatMessage {
   content: string;
 }
 
+interface StreamChunk {
+  text?: string;
+  done: boolean;
+  sessionId?: string;
+}
+
 @Injectable()
 export class ChatService {
   private sessions = new Map<string, ChatMessage[]>();
-  private client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  streamChat(sessionId: string, userMessage: string): Observable<MessageEvent> {
+  private getClient(): Anthropic {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+
+    if (!apiKey) {
+      throw new InternalServerErrorException(
+        'ANTHROPIC_API_KEY is not configured',
+      );
+    }
+
+    return new Anthropic({ apiKey });
+  }
+
+  streamChat(sessionId: string, userMessage: string): Observable<StreamChunk> {
     return new Observable((observer) => {
-      const messages = this.sessions.get(sessionId) ?? [];
-      messages.push({ role: 'user', content: userMessage });
+      const previousMessages = this.sessions.get(sessionId) ?? [];
+      const nextMessages = [
+        ...previousMessages,
+        { role: 'user' as const, content: userMessage },
+      ];
 
-      const stream = this.client.messages.stream({
+      const stream = this.getClient().messages.stream({
         model: 'claude-sonnet-4-6',
         max_tokens: 1024,
-        messages,
+        messages: nextMessages,
       });
 
       stream.on('text', (text) => {
-        observer.next({ data: { text, done: false } });
+        observer.next({ text, done: false });
       });
 
       stream
@@ -33,10 +52,12 @@ export class ChatService {
         .then((message) => {
           const assistantContent =
             message.content[0].type === 'text' ? message.content[0].text : '';
-          messages.push({ role: 'assistant', content: assistantContent });
-          this.sessions.set(sessionId, messages);
+          this.sessions.set(sessionId, [
+            ...nextMessages,
+            { role: 'assistant', content: assistantContent },
+          ]);
 
-          observer.next({ data: { text: '', done: true, sessionId } });
+          observer.next({ done: true, sessionId });
           observer.complete();
         })
         .catch((err) => observer.error(err));

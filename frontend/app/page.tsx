@@ -8,11 +8,7 @@ interface Message {
   streaming?: boolean;
 }
 
-const API_URL = process.env.API_URL;
-console.log(API_URL);
-if (!API_URL) {
-  throw new Error('API_URL is not set');
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3002';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -21,12 +17,17 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = () => {
+  useEffect(() => {
+    return () => abortControllerRef.current?.abort();
+  }, []);
+
+  const sendMessage = async () => {
     const userMessage = input.trim();
     if (!userMessage || isStreaming) return;
 
@@ -39,42 +40,10 @@ export default function ChatPage() {
       { role: 'assistant', content: '', streaming: true },
     ]);
 
-    const params = new URLSearchParams({ message: userMessage });
-    if (sessionId) params.set('sessionId', sessionId);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-    const eventSource = new EventSource(
-      `${API_URL}/chat/stream?${params.toString()}`
-    );
-
-    eventSource.onmessage = (e: MessageEvent) => {
-      const data = JSON.parse(e.data) as {
-        text: string;
-        done: boolean;
-        sessionId?: string;
-      };
-
-      if (data.done) {
-        if (data.sessionId) setSessionId(data.sessionId);
-        setMessages((prev) =>
-          prev.map((msg, i) =>
-            i === prev.length - 1 ? { ...msg, streaming: false } : msg
-          )
-        );
-        setIsStreaming(false);
-        eventSource.close();
-        inputRef.current?.focus();
-      } else {
-        setMessages((prev) =>
-          prev.map((msg, i) =>
-            i === prev.length - 1
-              ? { ...msg, content: msg.content + data.text }
-              : msg
-          )
-        );
-      }
-    };
-
-    eventSource.onerror = () => {
+    const setErrorState = () => {
       setMessages((prev) =>
         prev.map((msg, i) =>
           i === prev.length - 1
@@ -86,9 +55,95 @@ export default function ChatPage() {
             : msg
         )
       );
-      setIsStreaming(false);
-      eventSource.close();
     };
+
+    try {
+      const response = await fetch(`${API_URL}/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          sessionId,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error('Streaming request failed');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.trim()) {
+            continue;
+          }
+
+          const data = JSON.parse(line) as {
+            text?: string;
+            done?: boolean;
+            sessionId?: string;
+            error?: string;
+          };
+
+          if (data.error) {
+            throw new Error(data.error);
+          }
+
+          if (data.done) {
+            if (data.sessionId) {
+              setSessionId(data.sessionId);
+            }
+
+            setMessages((prev) =>
+              prev.map((msg, i) =>
+                i === prev.length - 1 ? { ...msg, streaming: false } : msg
+              )
+            );
+            setIsStreaming(false);
+            inputRef.current?.focus();
+            abortControllerRef.current = null;
+            return;
+          }
+
+          if (data.text) {
+            setMessages((prev) =>
+              prev.map((msg, i) =>
+                i === prev.length - 1
+                  ? { ...msg, content: msg.content + data.text }
+                  : msg
+              )
+            );
+          }
+        }
+      }
+
+      throw new Error('Streaming ended unexpectedly');
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        return;
+      }
+
+      setErrorState();
+      setIsStreaming(false);
+    } finally {
+      abortControllerRef.current = null;
+    }
   };
 
   return (
