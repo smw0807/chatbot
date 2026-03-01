@@ -162,12 +162,12 @@ export default function ChatPage() {
           <h1 className="mt-4 text-4xl leading-none font-semibold sm:text-5xl">
             Song
             <br />
-            Minu
+            Minwoo
           </h1>
           <p className="mt-5 max-w-sm text-sm leading-6 text-stone-300">
-            송민우에 대한 정보를 질문하면 답하는 포트폴리오 챗봇입니다.
-            현재 공개 프로필을 기준으로 응답하며, 제공되지 않은 내용은
-            추측하지 않습니다.
+            송민우에 대한 정보를 질문하면 답하는 포트폴리오 챗봇입니다. 현재
+            공개 프로필을 기준으로 응답하며, 제공되지 않은 내용은 추측하지
+            않습니다.
           </p>
 
           <div className="mt-8 space-y-3 rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
@@ -180,7 +180,10 @@ export default function ChatPage() {
             </div>
             <div>
               <p className="text-sm text-stone-400">Core stack</p>
-              <p className="text-base">Vue.js, Nuxt.js 2, JavaScript, Node.js</p>
+              <p className="text-base">
+                Vue.js, Nuxt.js, JavaScript, Node.js, Tailwind CSS, React,
+                Next.js, Nest.js TypeScript
+              </p>
             </div>
             <div>
               <p className="text-sm text-stone-400">Contact</p>
@@ -264,7 +267,8 @@ export default function ChatPage() {
           <div className="border-t border-stone-900/8 bg-white/85 px-4 py-4 sm:px-6">
             {!API_URL && (
               <p className="mb-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                `NEXT_PUBLIC_API_URL`이 설정되지 않아 채팅 요청을 보낼 수 없습니다.
+                `NEXT_PUBLIC_API_URL`이 설정되지 않아 채팅 요청을 보낼 수
+                없습니다.
               </p>
             )}
 
