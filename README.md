@@ -11,11 +11,11 @@
 
 ## 기술 스택
 
-| 구분 | 기술 |
-|------|------|
+| 구분         | 기술                                           |
+| ------------ | ---------------------------------------------- |
 | **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS |
-| **Backend** | NestJS 11, TypeScript |
-| **AI** | Anthropic Claude API (스트리밍) |
+| **Backend**  | NestJS 11, TypeScript                          |
+| **AI**       | Anthropic Claude API (스트리밍)                |
 
 ## 프로젝트 구조
 
@@ -93,8 +93,8 @@ cd frontend && npm run build && npm run start
 
 ## API 개요
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
+| 메서드 | 경로           | 설명                                         |
+| ------ | -------------- | -------------------------------------------- |
 | `POST` | `/chat/stream` | 채팅 메시지 전송, 스트리밍 응답 (SSE 스타일) |
 
 **요청 본문 예시**
@@ -114,3 +114,8 @@ cd frontend && npm run build && npm run start
 ## 라이선스
 
 Private / UNLICENSED
+
+# 구현 환면
+
+<img src="./img/1.png" />
+<img src="./img/2.png" />
