@@ -8,7 +8,7 @@ interface Message {
   streaming?: boolean;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+const API_URL = '/api';
 const SUGGESTED_QUESTIONS = [
   '송민우는 어떤 개발자인가요?',
   '주력 기술 스택이 뭐예요?',
@@ -35,7 +35,7 @@ export default function ChatPage() {
 
   const sendMessage = async (overrideMessage?: string) => {
     const userMessage = (overrideMessage ?? input).trim();
-    if (!userMessage || isStreaming || !API_URL) return;
+    if (!userMessage || isStreaming) return;
 
     setInput('');
     setIsStreaming(true);
@@ -267,13 +267,6 @@ export default function ChatPage() {
           </div>
 
           <div className="border-t border-stone-900/8 bg-white/85 px-4 py-4 sm:px-6">
-            {!API_URL && (
-              <p className="mb-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                `NEXT_PUBLIC_API_URL`이 설정되지 않아 채팅 요청을 보낼 수
-                없습니다.
-              </p>
-            )}
-
             <div className="flex gap-2">
               <input
                 ref={inputRef}
@@ -287,12 +280,12 @@ export default function ChatPage() {
                   }
                 }}
                 placeholder="송민우에 대해 질문해보세요"
-                disabled={isStreaming || !API_URL}
+                disabled={isStreaming}
                 className="flex-1 rounded-[1.15rem] border border-stone-900/12 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-stone-500 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
               />
               <button
                 onClick={() => sendMessage()}
-                disabled={isStreaming || !input.trim() || !API_URL}
+                disabled={isStreaming || !input.trim()}
                 className="rounded-[1.15rem] bg-amber-500 px-5 py-3 text-sm font-medium text-stone-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40">
                 전송
               </button>
