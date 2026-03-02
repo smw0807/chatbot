@@ -25,6 +25,7 @@ export const SONGMINU_PROFILE = `
 - Backend: Java, Spring, Node.js, Express, NestJS, Prisma, TypeScript, GraphQL
 - Storage/DB: MySQL (5.6), ElasticSearch (6.8, 7.x, 8.x), PostgreSQL, Firebase, Supabase, MongoDB
 - IDE: Eclipse, Visual Studio Code, Cursor
+- AI: Claude, OpenAI, Codex, Cursor
 
 ## Career Timeline
 
