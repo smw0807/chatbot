@@ -33,8 +33,8 @@ export default function ChatPage() {
     return () => abortControllerRef.current?.abort();
   }, []);
 
-  const sendMessage = async () => {
-    const userMessage = input.trim();
+  const sendMessage = async (overrideMessage?: string) => {
+    const userMessage = (overrideMessage ?? input).trim();
     if (!userMessage || isStreaming || !API_URL) return;
 
     setInput('');
@@ -199,8 +199,10 @@ export default function ChatPage() {
               {SUGGESTED_QUESTIONS.map((question) => (
                 <button
                   key={question}
-                  onClick={() => setInput(question)}
-                  className="rounded-full border border-white/10 bg-white/7 px-3 py-2 text-left text-sm text-stone-200 transition hover:bg-white/14">
+                  type="button"
+                  onClick={() => sendMessage(question)}
+                  disabled={isStreaming || !API_URL}
+                  className="rounded-full border border-white/10 bg-white/7 px-3 py-2 text-left text-sm text-stone-200 transition hover:bg-white/14 disabled:cursor-not-allowed disabled:opacity-60">
                   {question}
                 </button>
               ))}
@@ -289,7 +291,7 @@ export default function ChatPage() {
                 className="flex-1 rounded-[1.15rem] border border-stone-900/12 bg-stone-50 px-4 py-3 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-stone-500 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
               />
               <button
-                onClick={sendMessage}
+                onClick={() => sendMessage()}
                 disabled={isStreaming || !input.trim() || !API_URL}
                 className="rounded-[1.15rem] bg-amber-500 px-5 py-3 text-sm font-medium text-stone-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40">
                 전송
