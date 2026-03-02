@@ -8,7 +8,7 @@ interface Message {
   streaming?: boolean;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 const SUGGESTED_QUESTIONS = [
   '송민우는 어떤 개발자인가요?',
   '주력 기술 스택이 뭐예요?',
