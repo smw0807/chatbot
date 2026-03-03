@@ -2,6 +2,7 @@
 
 import {useEffect, useRef, useState} from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -9,7 +10,7 @@ interface Message {
   streaming?: boolean;
 }
 
-const API_URL = '/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 const SUGGESTED_QUESTIONS = [
   '송민우는 어떤 개발자인가요?',
   '주력 기술 스택이 뭐예요?',
@@ -257,6 +258,7 @@ export default function ChatPage() {
                       ) : (
                         <div className="prose prose-sm prose-stone max-w-none">
                           <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
                             components={{
                               a: ({href, children}) => (
                                 <a
