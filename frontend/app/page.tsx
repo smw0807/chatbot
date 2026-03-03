@@ -1,6 +1,7 @@
 'use client';
 
 import {useEffect, useRef, useState} from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -251,12 +252,29 @@ export default function ChatPage() {
                           ? 'bg-stone-950 text-stone-50'
                           : 'border border-stone-900/10 bg-white text-stone-800'
                       }`}>
-                      <p className="whitespace-pre-wrap">
-                        {msg.content}
-                        {msg.streaming && (
-                          <span className="ml-1 inline-block h-4 w-[2px] animate-pulse align-middle bg-current" />
-                        )}
-                      </p>
+                      {msg.role === 'user' ? (
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      ) : (
+                        <div className="prose prose-sm prose-stone max-w-none">
+                          <ReactMarkdown
+                            components={{
+                              a: ({href, children}) => (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-amber-600 underline hover:text-amber-500">
+                                  {children}
+                                </a>
+                              ),
+                            }}>
+                            {msg.content}
+                          </ReactMarkdown>
+                          {msg.streaming && (
+                            <span className="ml-1 inline-block h-4 w-[2px] animate-pulse align-middle bg-current" />
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
