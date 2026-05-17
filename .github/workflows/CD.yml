@@ -37,10 +37,10 @@ jobs:
           docker run -d \
             --name smw-chatbot \
             --restart always \
-            -e APP_PORT=$APP_PORT \
-            -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
-            -e ANTHROPIC_API_URL=$ANTHROPIC_API_URL \
-            -e ANTHROPIC_MODEL=$ANTHROPIC_MODEL \
-            -e FRONTEND_URL=$FRONTEND_URL \
+            -e APP_PORT="$APP_PORT" \
+            -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+            -e ANTHROPIC_API_URL="$ANTHROPIC_API_URL" \
+            -e ANTHROPIC_MODEL="$ANTHROPIC_MODEL" \
+            -e FRONTEND_URL="$FRONTEND_URL" \
             -p $APP_PORT:$APP_PORT \
             smw0807/smw-chatbot:1.0.0
