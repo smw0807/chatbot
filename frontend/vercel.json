@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/chat/(.*)",
-      "destination": "http://ec2-18-215-177-183.compute-1.amazonaws.com/chat/$1"
+      "destination": "http://ec2-3-37-89-120.ap-northeast-2.compute.amazonaws.com/chat/$1"
     }
   ]
 }
