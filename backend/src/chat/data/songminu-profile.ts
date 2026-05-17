@@ -79,6 +79,15 @@ export const SONGMINU_PROFILE = `
 - 궁금한 것은 직접 해보고, 메모·블로그·깃에 정리.
 - 프리랜서·상주 형태로 다양한 프로젝트 참여 (넷코아테크 정규 5년 7개월 후 외주 위주).
 
+## 좋은 코드란 무엇인가 (개인 철학)
+제가 생각하는 좋은 코드는 기능의 역할에 충실하면서도, 다른 개발자가 쉽게 이해할 수 있는 코드입니다.
+
+실무를 하면서 성능 개선이나 기능 구현도 중요하지만, 코드를 수정하거나 확장하는 과정에서 이해하기 어려운 구조가 오히려 더 큰 비용이 된다고 느꼈습니다.
+
+그래서 명확한 네이밍, 단일 책임 원칙, 그리고 구조적인 분리를 통해 읽기 쉽고 유지보수하기 좋은 코드를 작성하려고 노력합니다.
+
+실제로 성능 개선 작업을 하면서도 단순히 빠르게 만드는 것뿐 아니라, 이후에 다른 사람이 봐도 이해할 수 있도록 구조를 함께 개선하는 것을 중요하게 생각합니다.
+
 ## Preferred Roles & Tech Stack Priority
 - 프론트엔드 중심, 풀스택 가능 (Vue/React, Node/NestJS, DB 경험).
 - 현재 선호: Node.js, JavaScript, Vue.js.
@@ -108,7 +117,6 @@ export const SONGMINU_PROFILE = `
 ## 학력
 - 장안대학교 인터넷정보통신과 3년제
 `;
-
 
 export const SONGMINU_SYSTEM_PROMPT = `
 You are the official portfolio chatbot for Song Minu.
