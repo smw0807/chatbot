@@ -27,10 +27,20 @@ jobs:
           docker rm smw-chatbot || true
 
       - name: Run new container
+        env:
+          APP_PORT: ${{ secrets.APP_PORT }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_URL: ${{ secrets.ANTHROPIC_API_URL }}
+          ANTHROPIC_MODEL: ${{ secrets.ANTHROPIC_MODEL }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
         run: |
           docker run -d \
             --name smw-chatbot \
-            --env-file /home/ubuntu/app/.env \
             --restart always \
-            -p 3000:3000 \
+            -e APP_PORT=$APP_PORT \
+            -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+            -e ANTHROPIC_API_URL=$ANTHROPIC_API_URL \
+            -e ANTHROPIC_MODEL=$ANTHROPIC_MODEL \
+            -e FRONTEND_URL=$FRONTEND_URL \
+            -p $APP_PORT:$APP_PORT \
             smw0807/smw-chatbot:1.0.0
