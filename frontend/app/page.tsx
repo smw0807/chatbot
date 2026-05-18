@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useRef, useState} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -16,6 +16,7 @@ const SUGGESTED_QUESTIONS = [
   '주력 기술 스택이 뭐예요?',
   '블로그와 GitHub 링크를 알려줘',
   '어떤 프로젝트를 해왔나요?',
+  '개발 철학같은게 있나요?',
 ];
 
 export default function ChatPage() {
@@ -28,7 +29,7 @@ export default function ChatPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({behavior: 'smooth'});
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
@@ -44,8 +45,8 @@ export default function ChatPage() {
 
     setMessages((prev) => [
       ...prev,
-      {role: 'user', content: userMessage},
-      {role: 'assistant', content: '', streaming: true},
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: '', streaming: true },
     ]);
 
     const controller = new AbortController();
@@ -87,13 +88,13 @@ export default function ChatPage() {
       let buffer = '';
 
       while (true) {
-        const {value, done} = await reader.read();
+        const { value, done } = await reader.read();
 
         if (done) {
           break;
         }
 
-        buffer += decoder.decode(value, {stream: true});
+        buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
 
@@ -120,7 +121,7 @@ export default function ChatPage() {
 
             setMessages((prev) =>
               prev.map((msg, i) =>
-                i === prev.length - 1 ? {...msg, streaming: false} : msg,
+                i === prev.length - 1 ? { ...msg, streaming: false } : msg,
               ),
             );
             setIsStreaming(false);
@@ -133,7 +134,7 @@ export default function ChatPage() {
             setMessages((prev) =>
               prev.map((msg, i) =>
                 i === prev.length - 1
-                  ? {...msg, content: msg.content + data.text}
+                  ? { ...msg, content: msg.content + data.text }
                   : msg,
               ),
             );
@@ -204,7 +205,8 @@ export default function ChatPage() {
                   type="button"
                   onClick={() => sendMessage(question)}
                   disabled={isStreaming || !API_URL}
-                  className="rounded-full border border-white/10 bg-white/7 px-3 py-2 text-left text-sm text-stone-200 transition hover:bg-white/14 disabled:cursor-not-allowed disabled:opacity-60">
+                  className="rounded-full border border-white/10 bg-white/7 px-3 py-2 text-left text-sm text-stone-200 transition hover:bg-white/14 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   {question}
                 </button>
               ))}
@@ -246,13 +248,15 @@ export default function ChatPage() {
                     key={i}
                     className={`flex ${
                       msg.role === 'user' ? 'justify-end' : 'justify-start'
-                    }`}>
+                    }`}
+                  >
                     <div
                       className={`max-w-[85%] rounded-[1.5rem] px-4 py-3 text-sm leading-7 sm:max-w-[75%] ${
                         msg.role === 'user'
                           ? 'bg-stone-950 text-stone-50'
                           : 'border border-stone-900/10 bg-white text-stone-800'
-                      }`}>
+                      }`}
+                    >
                       {msg.role === 'user' ? (
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       ) : (
@@ -260,16 +264,18 @@ export default function ChatPage() {
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
-                              a: ({href, children}) => (
+                              a: ({ href, children }) => (
                                 <a
                                   href={href}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-amber-600 underline hover:text-amber-500">
+                                  className="text-amber-600 underline hover:text-amber-500"
+                                >
                                   {children}
                                 </a>
                               ),
-                            }}>
+                            }}
+                          >
                             {msg.content}
                           </ReactMarkdown>
                           {msg.streaming && (
@@ -306,7 +312,8 @@ export default function ChatPage() {
               <button
                 onClick={() => sendMessage()}
                 disabled={isStreaming || !input.trim()}
-                className="rounded-[1.15rem] bg-amber-500 px-5 py-3 text-sm font-medium text-stone-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40">
+                className="rounded-[1.15rem] bg-amber-500 px-5 py-3 text-sm font-medium text-stone-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
+              >
                 전송
               </button>
             </div>
